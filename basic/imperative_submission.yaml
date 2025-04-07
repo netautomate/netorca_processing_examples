@@ -1,0 +1,115 @@
+---
+
+- name: Process Service Items Imperative
+  hosts: localhost
+  gather_facts: false
+  vars:
+    service_name: "SERVICE_NAME"
+    netorca_provider:
+      url:  "{{ netorca_url }}"
+      api_key: "{{ netorca_api_key }}"
+  tasks:
+    - name: Get APPROVED CREATE Change Instances
+      netautomate.netorca.get_change_instances:
+        url: "{{ netorca_provider.url }}"
+        api_key: "{{ netorca_provider.api_key }}"
+        context: "serviceowner"
+        filters:
+          service_name: "{{ service_name }}"
+          state: "APPROVED"
+          change_type: "CREATE"
+      register: create_cis
+
+    - name: Loop through CREATE CIs and try processing
+      block:
+        - name: Simulate or perform action on CI
+          block:
+            - name: Perform action task here
+              debug:
+                msg: "Processing CI ID: {{ item.id }}"
+              register: result
+              ignore_errors: true
+
+            - name: Update CI state to COMPLETED if no failure occurred
+              when: not result.failed
+              netautomate.netorca.update_change_instance:
+                url: "{{ netorca_provider.url }}"
+                api_key: "{{ netorca_provider.api_key }}"
+                context: "serviceowner"
+                id: "{{ item.id }}"
+                update:
+                  state: "COMPLETED"
+      loop: "{{ create_cis.change_instances.results }}"
+      loop_control:
+        label: "{{ item.id }}"
+
+
+    - name: Get APPROVED MODIFY Change Instances
+      netautomate.netorca.get_change_instances:
+        url: "{{ netorca_provider.url }}"
+        api_key: "{{ netorca_provider.api_key }}"
+        context: "serviceowner"
+        filters:
+          service_name: "{{ service_name }}"
+          state: "APPROVED"
+          change_type: "CREATE"
+      register: modify_cis
+
+    - name: Loop through MODIFY CIs and try processing
+      block:
+        - name: Simulate or perform action on CI
+          block:
+            - name: Perform action task here
+              debug:
+                msg: "Processing CI ID: {{ item.id }}"
+              register: result
+              ignore_errors: true
+
+            - name: Update CI state to COMPLETED if no failure occurred
+              when: not result.failed
+              netautomate.netorca.update_change_instance:
+                url: "{{ netorca_provider.url }}"
+                api_key: "{{ netorca_provider.api_key }}"
+                context: "serviceowner"
+                id: "{{ item.id }}"
+                update:
+                  state: "COMPLETED"
+      loop: "{{ modify_cis.change_instances.results }}"
+      loop_control:
+        label: "{{ item.id }}"
+
+
+      - name: Get APPROVED DELETE Change Instances
+        netautomate.netorca.get_change_instances:
+          url: "{{ netorca_provider.url }}"
+          api_key: "{{ netorca_provider.api_key }}"
+          context: "serviceowner"
+          filters:
+            service_name: "{{ service_name }}"
+            state: "APPROVED"
+            change_type: "DELETE"
+        register: delete_cis
+
+      - name: Loop through DELETE CIs and try processing
+        block:
+          - name: Simulate or perform action on CI
+            block:
+              - name: Perform action task here
+                debug:
+                  msg: "Processing CI ID: {{ item.id }}"
+                register: result
+                ignore_errors: true
+
+              - name: Update CI state to COMPLETED if no failure occurred
+                when: not result.failed
+                netautomate.netorca.update_change_instance:
+                  url: "{{ netorca_provider.url }}"
+                  api_key: "{{ netorca_provider.api_key }}"
+                  context: "serviceowner"
+                  id: "{{ item.id }}"
+                  update:
+                    state: "COMPLETED"
+        loop: "{{ delete_cis.change_instances.results }}"
+        loop_control:
+          label: "{{ item.id }}"
+

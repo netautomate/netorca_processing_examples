@@ -1,0 +1,6 @@
+ {% for si in service_items.service_items.results %}
+    {{ si }}
+        {% if not loop.last %}
+            -------------------------
+        {% endif %}
+{% endfor %}
