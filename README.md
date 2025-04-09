@@ -30,10 +30,9 @@ With NetOrca:
 - **Consumers** easily request these services.
 - NetOrca manages approvals, tracking, and integrates seamlessly with your existing automation tools (Ansible, Terraform, etc.).
 
-**In short:** NetOrca makes infrastructure self-service, fast, and reliable.
+**In short:** NetOrca makes infrastructure privisioning self-service, fast, and reliable.
 
-![Placeholder: NetOrca Workflow](images/netorca_overview.png)  
-*Suggested diagram: Consumers requesting services through NetOrca, with Service Owner automation deploying changes.*
+![NetOrca Workflow](images/netorca_overview.png)  
 
 ## ✅ Overview of Automation Workflow
 
