@@ -18,7 +18,7 @@ All examples use clear Ansible playbooks to quickly get you started.
 ## ⚡️ Getting Started
 
 1. **Check the Basics:**  
-   Explore detailed steps and concepts in the **Overview of Automation Workflow** below.
+   Explore detailed steps and concepts in the **[Overview of Automation Workflow](../README.md)** below.
 
 2. **Choose Your Automation Style:**  
    - **Declarative:** All-at-once deployments.
