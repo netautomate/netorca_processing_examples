@@ -1,0 +1,95 @@
+---
+- name: Process WideIP Deployments
+  hosts: localhost
+  gather_facts: false
+  vars:
+    ansible_python_interpreter: "{{ ansible_playbook_python }}"
+    service_name: "WideIP"
+    netorca_provider:
+      url:  "{{ netorca_url }}"
+      api_key: "{{ netorca_api_key }}"
+    f5_provider:
+      fqdn: "{{ f5_fqdn }}"
+      username: "{{ f5_username }}"
+      password: "{{ f5_password }}"
+      tenant: "demo567"
+      dc1_ratio: "{{ dc1_ratio | int }}"
+      dc2_ratio: "{{ dc2_ratio | int }}"
+  tasks:
+    - block:
+        - name: Get APPROVED Change Instances
+          netautomate.netorca.get_change_instances:
+            url: "{{ netorca_provider.url }}"
+            api_key: "{{ netorca_provider.api_key }}"
+            context: "serviceowner"
+            filters:
+              service_name: "{{ service_name }}"
+              state: "APPROVED"
+          register: approved_change_instances
+                
+        - name: No Change Instances to deploy...
+          meta: end_play
+          when: approved_change_instances.change_instances.results | length == 0
+        
+        - name: Get All Service Items
+          netautomate.netorca.get_service_items:
+            url: "{{ netorca_provider.url }}"
+            api_key: "{{ netorca_provider.api_key }}"
+            context: serviceowner
+            filters:
+              service_name: "{{ service_name }}"
+              runtime_state: IN_SERVICE
+          register: service_items
+        - name: OUTPUT SI's
+          ansible.builtin.debug:
+            msg: "{{ service_items }}"
+        - name: Initialize f5_result
+          set_fact:
+            f5_result: {"failed": false}
+
+        - name: RUN Load Balancer (F5) Deployment Task
+          block:
+            - import_tasks: ./wideip/f5_deploy_wideip.yaml
+          rescue:
+            - set_fact:
+                f5_result: {"failed": true}
+        
+        - name: Filter CREATE type changes
+          set_fact:
+            create_changes: "{{ approved_change_instances.change_instances.results | selectattr('change_type', 'eq', 'CREATE') | list }}"
+
+        - name: Create Load Balancer Configuration Items
+          servicenow.itsm.configuration_item:
+            instance:
+              host: "{{ snow_provider.fqdn }}"
+              username: "{{ snow_provider.username }}"
+              password: "{{ snow_provider.password }}"
+            name: "F5 WideIP - {{ item.service_item.name }}"
+            short_description: "WideIP configuration for {{ item.service_item.name }}"
+            sys_class_name: cmdb_ci_lb
+            assigned_to: admin
+            environment: Development
+            category: Software
+            ip_address: "{{ item.service_item.declaration.dc1_server }}"
+            other:
+              secondary_ip: "{{ item.service_item.declaration.dc2_server }}"
+              application: "{{ item.application.name }}"
+              team: "{{ item.consumer_team.name }}"
+          register: lb_items
+          loop: "{{ create_changes }}"
+
+        - name: Extract CMDB CI sys_ids
+          set_fact:
+            ci_sys_ids: "{{ lb_items.results | map(attribute='record.sys_id') | list }}"
+        - name: Show Created CMDB CI IDs
+          ansible.builtin.debug:
+            msg: "Created CMDB CIs: {{ ci_sys_ids }}"
+
+        - name: UPDATE CHANGE INSTANCE RECORDS BASED ON DEPLOYMENT RESULTS
+          netautomate.netorca.update_change_instances:
+            url: "{{ netorca_provider.url }}"
+            api_key: "{{ netorca_provider.api_key }}"
+            context: serviceowner
+            id: "{{ item.id }}"
+            state: "{{ 'COMPLETED' }}"
+          loop: "{{ approved_change_instances.change_instances.results }}"

@@ -1,0 +1,32 @@
+---
+- name: Validate WideIPs
+  hosts: localhost
+  gather_facts: false
+  vars:
+    netorca_url: "{{ netorca_url }}"
+    netorca_api_key: "{{ netorca_api_key }}"
+    service_name: "WideIP"
+
+  tasks:
+    - name: GET Change Instances that are PENDING
+      netautomate.netorca.get_change_instances:
+        url: "{{ netorca_url }}"
+        api_key: "{{ netorca_api_key }}"
+        context: serviceowner
+        filters:
+          service_name: "{{ service_name }}"
+          state: PENDING
+      register: pending_change_instances
+
+    - name: Perform validations
+      ansible.builtin.debug:
+        msg: "Here we take PENDING change instances and perform custom validations like checking requests already exist, if there are no conflicts, if IPs are available etc."
+
+    - name: APPROVE Valid Change Instances
+      netautomate.netorca.update_change_instances:
+        url: "{{ netorca_url }}"
+        api_key: "{{ netorca_api_key }}"
+        context: serviceowner
+        id: "{{ item.id }}"
+        state: APPROVED
+      loop: "{{ pending_change_instances.change_instances.results }}"
