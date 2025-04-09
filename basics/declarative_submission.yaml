@@ -1,6 +1,6 @@
 ---
 
-- name: Process Service Items
+- name: Declaratively process Service Items
   hosts: localhost
   gather_facts: false
   vars:
@@ -33,14 +33,18 @@
           runtime_state: IN_SERVICE
       register: service_items
 
+    ### Custome logic starts there
+
     - name: Build declaration
       ansible.builtin.set_fact:
         declaration: "{{ lookup('template', './declaration.j2', split_lines=False) }}"
-
+    
     - name: Deploy the declaration
       msg:
         debug: {{ declaration }}
 
+    ### Custom logic ends there
+    
     - name: UPDATE CHANGE INSTANCE RECORDS BASED ON DEPLOYMENT RESULTS
       netautomate.netorca.update_change_instances:
         url: "{{ netorca_provider.url }}"

@@ -1,6 +1,6 @@
 ---
 
-- name: Process Service Items Imperative
+- name: Imperatively process Service Items
   hosts: localhost
   gather_facts: false
   vars:
@@ -42,7 +42,6 @@
       loop: "{{ create_cis.change_instances.results }}"
       loop_control:
         label: "{{ item.id }}"
-
 
     - name: Get APPROVED MODIFY Change Instances
       netautomate.netorca.get_change_instances:
