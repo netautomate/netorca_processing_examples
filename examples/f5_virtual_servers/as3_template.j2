@@ -1,0 +1,47 @@
+{% macro render_app(service_item) %}
+"VS_{{ service_item.name }}": {
+  "class": "Service_HTTP",
+  "virtualAddresses": ["{{ service_item.ip }}"],
+  "pool": "pool_{{ service_item.name }}"
+},
+"pool_{{ service_item.name }}": {
+  "class": "Pool",
+  "members": [
+    {% for member in service_item.pool_members %}
+    {
+      "address": "{{ member }}",
+      "port": {{ service_item.port }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ],
+  "monitors": [
+    {
+      "bigip": "/Common/http"
+    }
+  ]
+}
+{% endmacro %}
+
+{
+  "class": "AS3",
+  "action": "deploy",
+  "persist": true,
+  "declaration": {
+    "class": "ADC",
+    "schemaVersion": "3.49.0",
+    "id": "virtual-server-deployment",
+    "label": "Virtual Server Deployment",
+    "remark": "Virtual Server deployment with pool members",
+    "{{ f5_provider.tenant }}": {
+      "class": "Tenant",
+      "Application": {
+        "class": "Application",
+        "template": "generic",
+        {% for service_item in service_items.service_items.results %}
+          {{ render_app(service_item.declaration) }}
+          {% if not loop.last %},{% endif %}
+        {% endfor %}
+      }
+    }
+  }
+}

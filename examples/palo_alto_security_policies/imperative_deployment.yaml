@@ -1,0 +1,108 @@
+---
+  - name: Get APPROVED Change Instances
+    netautomate.netorca.get_change_instances:
+      url: "{{ netorca_provider.url }}"
+      api_key: "{{ netorca_provider.api_key }}"
+      context: "serviceowner"
+      filters:
+        service_name: "{{ service_name }}"
+        state: "APPROVED"
+    register: approved_change_instances
+
+  - name: No Change Instances to deploy...
+    meta: end_play
+    when: approved_change_instances.change_instances.results | length == 0
+
+  - name: Filter CREATE/MODIFY Change Instances
+    set_fact:
+      create_modify_change_instances: >-
+        {{
+          approved_change_instances.change_instances.results
+          | selectattr("change_type", "in", ["CREATE", "MODIFY"])
+          | sort(attribute="created")
+          | groupby("service_item.id")
+          | map('last')
+          | map('last')
+          | list
+        }}
+
+  - name: Transform CREATE/MODIFY Change Instances into panos_security_rule format
+    set_fact:
+      panos_deploy_rules: >-
+        {{
+          panos_deploy_rules | default([]) + [{
+            "rule_name": item.new_declaration.declaration.name,
+            "source": item.new_declaration.declaration.source_address,
+            "destination": item.new_declaration.declaration.destination_address,
+            "application": item.new_declaration.declaration.application,
+            "service": item.new_declaration.declaration.service,
+            "action": item.new_declaration.declaration.action,
+            "rule_type": "universal"
+          }]
+        }}
+    loop: "{{ create_modify_change_instances }}"
+    loop_control:
+      loop_var: item
+
+  - name: Filter DELETE Change Instances
+    set_fact:
+      delete_change_instances: >-
+        {{
+          approved_change_instances.change_instances.results
+          | selectattr("change_type", "equalto", "DELETE")
+          | list
+        }}
+    register: delete_change_instances
+
+  - name: Transform DELETE Change Instances into panos_security_rule format
+    set_fact:
+      panos_delete_rules: >-
+        {{
+          panos_delete_rules | default([]) + [{
+            "rule_name": item.old_declaration.declaration.name,
+          }]
+        }}
+    loop: "{{ delete_change_instances.ansible_facts.delete_change_instances }}"
+    loop_control:
+      loop_var: item
+
+  - name: DELETE security policies
+    paloaltonetworks.panos.panos_security_rule:
+      provider: "{{ palo_alto_provider }}"
+      rule_name: "{{ item.rule_name }}"
+      state: "absent"
+      commit: "no"
+    loop: "{{ panos_delete_rules }}"
+    when: panos_delete_rules is defined
+
+  - name: CREATE/MODIFY security policies
+    paloaltonetworks.panos.panos_security_rule:
+      provider: "{{ palo_alto_provider }}"
+      rule_name: "{{ item.rule_name }}"
+      source_ip: "{{ item.source }}"
+      destination_ip: "{{ item.destination }}"
+      application: "{{ item.application }}"
+      service: "{{ item.service }}"
+      action: "{{ item.action }}"
+      rule_type: "{{ item.rule_type }}"
+      state: "present"
+      commit: "no"
+    loop: "{{ panos_deploy_rules }}"
+
+  - name: Wait...
+    pause:
+      seconds: 5
+
+  - name: Commit security rules configuration
+    paloaltonetworks.panos.panos_commit_firewall:
+      provider: '{{ palo_alto_provider }}'
+    when: panos_deploy_rules or panos_delete_rules
+
+  - name: COMPLETE Change Instances
+    netautomate.netorca.update_change_instances:
+      url: "{{ netorca_provider.url }}"
+      api_key: "{{ netorca_provider.api_key }}"
+      id: "{{ item.id }}"
+      state: COMPLETED
+    loop: "{{ approved_change_instances.change_instances.results }}"
+

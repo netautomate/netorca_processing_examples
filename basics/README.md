@@ -1,4 +1,4 @@
-## 🚀 What's Inside?
+## What's Inside?
 
 This repository includes automation examples for two common approaches:
 
@@ -15,7 +15,7 @@ Additionally:
 
 All examples use clear Ansible playbooks to quickly get you started.
 
-## ⚡️ Getting Started
+## Getting Started
 
 1. **Check the Basics:**  
    Explore detailed steps and concepts in the **[Overview of Automation Workflow](../README.md)**.

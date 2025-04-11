@@ -1,0 +1,25 @@
+
+# get deployable service items and change instances
+
+- name: Transform service items into panos_security_rule format
+  set_fact:
+    panos_deploy_rules: >-
+      {{
+        panos_deploy_rules | default([]) + [{
+          "rule_name": app.declaration.name,
+          "source": app.declaration.source_address,
+          "destination": app.declaration.destination_address,
+          "application": app.declaration.application,
+          "service": app.declaration.service,
+          "action": app.declaration.action,
+          "rule_type": "universal"
+        }]
+      }}
+  loop: "{{ deployable_service_items.service_items.results }}"
+  loop_control:
+    loop_var: app
+- name: Print TO DEPLOY security policies
+  debug:
+    var: panos_deploy_rules
+
+# close change instances

@@ -1,4 +1,5 @@
----
+#### NetOrca get Change Instances / Service Items (get snippet from ./basics/declarative_submission.yaml)
+
 - name: RENDER JINJA AS3 TEMPLATE
   ansible.builtin.set_fact:
     tenant_body: "{{ lookup('template', './as3_template.j2', split_lines=False) }}"
@@ -25,7 +26,7 @@
     timeout: 120
   register: deploy_as3
   until: deploy_as3 is not failed
-  retries: 0
+  retries: 3
   delay: 30
-  tags:
-    - deploy_as3
+
+#### NetOrca close Change Instances (get snippet from ./basics/declarative_submission.yaml) 
