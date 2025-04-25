@@ -1,0 +1,110 @@
+{
+  "$id": "https://netorca.io/schemas/api_gateway.schema.json",
+  "type": "object",
+  "title": "API_GATEWAY",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "metadata": {
+    "monthly_cost": 150,
+    "cost_per_change": 50
+  },
+  "required": [
+    "name",
+    "base_path",
+    "target_url"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^([a-z]{1}[a-z0-9-]{1,60})(-dev|-sit|-uat|-nft|-qa|-prod)$",
+      "description": "Name of the API Gateway endpoint with environment suffix",
+      "examples": [
+        "user-service-dev",
+        "payment-service-prod"
+      ]
+    },
+    "base_path": {
+      "type": "string",
+      "pattern": "^/[a-z0-9-]+(/[a-z0-9-]+)*$",
+      "description": "Base path for the API endpoint",
+      "examples": [
+        "/api/users",
+        "/api/payments"
+      ]
+    },
+    "target_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "Target URL where the API requests will be forwarded",
+      "examples": [
+        "http://internal-service:8080",
+        "https://backend-service:8443"
+      ]
+    },
+    "methods": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"]
+      },
+      "description": "HTTP methods allowed for this endpoint",
+      "default": ["GET", "POST", "PUT", "DELETE"],
+      "examples": [
+        ["GET", "POST"],
+        ["GET", "PUT", "DELETE"]
+      ]
+    },
+    "rate_limit": {
+      "type": "object",
+      "properties": {
+        "requests_per_minute": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum number of requests allowed per minute"
+        },
+        "burst_size": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum number of requests allowed in a burst"
+        }
+      },
+      "description": "Rate limiting configuration"
+    },
+    "authentication": {
+      "type": "string",
+      "enum": ["none", "jwt", "api_key", "oauth2"],
+      "default": "none",
+      "description": "Authentication method for the API endpoint"
+    },
+    "cors": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "allowed_origins": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "allowed_methods": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"]
+          }
+        },
+        "allowed_headers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "CORS configuration for the API endpoint"
+    }
+  },
+  "description": "API Gateway endpoint configuration"
+} 

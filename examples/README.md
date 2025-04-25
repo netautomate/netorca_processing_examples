@@ -2,6 +2,85 @@
 
 This directory contains illustrative examples of how to use NetOrca for various network automation tasks. These examples are meant to demonstrate concepts and patterns, and may require adjustments to work in your specific environment.
 
+> **Note**: These examples are provided for illustrative purposes only. They demonstrate the basic concepts and patterns of using NetOrca for network automation. Before implementing in a production environment, you should:
+> - Review and adapt the examples to your specific requirements
+> - Add appropriate error handling and logging
+> - Implement proper security measures
+> - Add validation and testing procedures
+> - Consider your organization's change management processes
+> - Consult with your network operations team
+
+## Workflow Diagram
+
+```
++-------------------+    +------------------+
+| Customer Request | -> | NetOrca Platform |
++-------------------+    +------------------+
+                                |
+                                v
+                       +------------------+
+                       | Create Service   |
+                       | Item & Change    |
+                       | Instance         |
+                       +------------------+
+                                |
+                                v
+                       +------------------+
+                       | PENDING Status   |
+                       +------------------+
+                                |
+                                v
+                       +-----------------+
+                       | Validation      |
+                       | Playbook        |
+                       | (Service Owner) |
+                       +-----------------+
+                                |
+                                v
+              +---------------------------------------+
+              |                                       |
+              v                                       v
+    +------------------+                   +------------------+
+    | APPROVED Status  |                   | REJECTED Status  |
+    +------------------+                   +------------------+
+              |
+              v
+    +------------------+
+    | Deployment       |
+    | Playbook         |
+    | (Service Owner)  |
+    +------------------+
+              |
+              v
+    +------------------+
+    | (example flow)   |
+    +------------------+
+              |                      
+              v                      
+    +------------------+    +----------------------------+
+    | As3F5 deployment  |-->| F5 BIG-IP API AS3          |
+    +------------------+    | POST /mgmt/shared/appsvcs/ |
+              |             +----------------------------+
+              v
+    +------------------+    +----------------------------+
+    | ServiceNow CMDB  |--->| ServiceNow API             |
+    | CI Create Entry  |    | POST /api/now/table/cmdb_ci|
+                           +----------------------------+
+    +------------------+
+              |
+              v
+    +------------------+     +----------------------------+
+    | Infoblox CNAME   |--->| Infoblox API                  |
+    | Creation         |    | POST /wapi/v2.11/record:cname |
+    +------------------+     +----------------------------+
+              |
+              v
+    +------------------+
+    | Update NetOrca   |
+    | COMPLETED Status |
+    +------------------+
+```
+
 ## Directory Structure
 
 - `./basics/` - Contains fundamental building blocks and reusable components
