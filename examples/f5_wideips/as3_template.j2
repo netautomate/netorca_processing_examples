@@ -1,0 +1,107 @@
+{% macro render_app(service_item) %}
+"WideIP_{{ service_item.name }}_demo_com": {
+  "class": "GSLB_Domain",
+  "domainName": "{{ service_item.name }}.demo.com",
+  "resourceRecordType": "A",
+  "pools": [
+    {
+      "use": "pool_{{ service_item.name }}_demo_com"
+    }
+  ]
+},
+"pool_{{ service_item.name }}_demo_com": {
+  "class": "GSLB_Pool",
+  "resourceRecordType": "A",
+  "loadBalancingMode": "ratio",
+  "members": [
+    {
+      "server": { "use": "/Common/Shared/AutomatedSharedServer_dc1" },
+      "virtualServer": "vs_dc1_{{ service_item.name }}_demo_com",
+      "ratio": {{ f5_provider.dc1_ratio | int }}
+    },
+    {
+      "server": { "use": "/Common/Shared/AutomatedSharedServer_dc2" },
+      "virtualServer": "vs_dc2_{{ service_item.name }}_demo_com",
+      "ratio": {{ f5_provider.dc2_ratio | int }}
+    }
+  ]
+}
+{% endmacro %}
+
+{
+  "class": "AS3",
+  "action": "deploy",
+  "persist": true,
+  "declaration": {
+    "class": "ADC",
+    "schemaVersion": "3.49.0",
+    "id": "CR000008",
+    "label": "test-label",
+    "remark": "test-remark",
+    "Common": {
+      "class": "Tenant",
+      "Shared": {
+        "class": "Application",
+        "template": "shared",
+           "AutomatedSharedServer_dc1": {
+          "class": "GSLB_Server",
+          "dataCenter": {
+            "bigip": "/Common/dc1"
+          },
+          "monitors": [],
+          "devices": [
+            {
+              "address": "192.168.1.1",
+              "name": "dc1-device"
+            }
+          ],
+          "serverType": "generic-host",
+          "virtualServers": [
+            {% for service_item in service_items.service_items.results %}
+            {
+              "name": "vs_dc1_{{ service_item.declaration.name }}_demo_com",
+              "address": "{{ service_item.declaration.dc1_server }}",
+              "port": 443
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+          ]
+        },
+        "AutomatedSharedServer_dc2": {
+          "class": "GSLB_Server",
+          "dataCenter": {
+            "bigip": "/Common/dc2"
+          },
+          "monitors": [],
+          "devices": [
+            {
+              "address": "192.168.2.1",
+              "name": "dc2-device"
+            }
+          ],
+          "serverType": "generic-host",
+          "virtualServers": [
+            {% for service_item in service_items.service_items.results %}
+            {
+              "name": "vs_dc2_{{ service_item.declaration.name }}_demo_com",
+              "address": "{{ service_item.declaration.dc2_server }}",
+              "port": 443
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+          ]
+        }
+      }
+    },
+    "{{ f5_provider.tenant }}": {
+      "class": "Tenant",
+      "Application": {
+        "class": "Application",
+        "template": "generic",
+     
+        {% for service_item in service_items.service_items.results %}
+          {{ render_app(service_item.declaration) }}
+          {% if not loop.last %},{% endif %}
+        {% endfor %}
+      }
+    }
+  }
+}

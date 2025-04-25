@@ -1,0 +1,34 @@
+
+#### NetOrca get Change Instances / Service Items (get snippet from ./basics/declarative_submission.yaml)
+
+- name: RENDER JINJA AS3 TEMPLATE
+  ansible.builtin.set_fact:
+    tenant_body: "{{ lookup('template', './as3_template.j2', split_lines=False) }}"
+
+- name: PARSE JSON FOR DEBUGGING
+  ansible.builtin.set_fact:
+    tenant_body_json: "{{ tenant_body | from_json }}"
+
+- name: OUTPUT FORMATTED AS3 JSON
+  ansible.builtin.debug:
+    msg: "{{ tenant_body_json }}"
+
+- name: Deploy AS3 to BigIP
+  ansible.builtin.uri:
+    url: "{{ f5_provider.fqdn }}/mgmt/shared/appsvcs/declare"
+    method: "POST"
+    user: "{{ f5_provider.username }}"
+    password: "{{ f5_provider.password }}"
+    body: "{{ tenant_body }}"
+    force_basic_auth: true
+    status_code: 200,202
+    body_format: json
+    validate_certs: false
+    timeout: 120
+  register: deploy_as3
+  until: deploy_as3 is not failed
+  retries: 0
+  delay: 30
+
+
+#### NetOrca close Change Instances (get snippet from ./basics/declarative_submission.yaml)
