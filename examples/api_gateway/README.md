@@ -12,11 +12,10 @@ This service allows the deployment of API endpoints with features like authentic
 ```
 api_gateway/
 ├── customer_request_example/      # Example request configurations
-│   ├── simple_service.yaml        # Basic configuration example
-│   └── comprehensive_service.yaml # Full-featured configuration example
+│   └── application1.yaml          # Full-featured Customer configuration example
 ├── deployment/                    # Deployment playbooks and templates
 │   ├── api_gateway_deploy.yaml    # Main deployment playbook
-│   └── as3_template.j2           # F5 AS3 template
+│   └── as3_template.j2            # F5 AS3 template
 ├── service_owner_schema/          # Schema definitions
 │   └── api_gateway_schema.json    # JSON schema defining the service structure
 └── README.md                      # This documentation
