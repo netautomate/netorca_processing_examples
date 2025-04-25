@@ -4,7 +4,7 @@ In this example, we focus on the deployment of API Gateway services, leveraging 
 
 ### Service Overview
 - **Service**: API Gateway Deployment
-- **Platform**: API Gateway
+- **Platform**: F5 Networks + Infoblox + ServiceNow
 
 This service allows the deployment of API endpoints with features like authentication, rate limiting, and CORS support.
 
