@@ -1,0 +1,80 @@
+---
+- name: Deploy API Gateway Configuration
+  hosts: localhost
+  gather_facts: false
+  vars:
+    netorca_url: "{{ netorca_url }}"
+    netorca_api_key: "{{ netorca_api_key }}"
+    service_name: "API_GATEWAY"
+
+  tasks:
+    - name: Get APPROVED Change Instances
+      netautomate.netorca.get_change_instances:
+        url: "{{ netorca_url }}"
+        api_key: "{{ netorca_api_key }}"
+        context: serviceowner
+        filters:
+          service_name: "{{ service_name }}"
+          state: APPROVED
+      register: approved_change_instances
+
+    - name: No Change Instances to deploy...
+      meta: end_play
+      when: approved_change_instances.change_instances.results | length == 0
+
+    - name: Process each API Gateway configuration
+      block:
+        # Job 1: Deploy F5 AS3 Configuration
+        - name: Deploy F5 AS3 Configuration
+          uri:
+            url: "https://{{ f5_host }}/mgmt/shared/appsvcs/declare"
+            method: POST
+            body: "{{ lookup('template', 'as3_template.j2') }}"
+            body_format: json
+            status_code: 200
+            validate_certs: false
+            headers:
+              Content-Type: "application/json"
+            url_username: "{{ f5_username }}"
+            url_password: "{{ f5_password }}"
+          register: f5_result
+
+        # Job 2: Create ServiceNow CMDB CI
+        - name: Create ServiceNow CMDB CI
+          servicenow.itsm.snow_record:
+            instance:
+              host: "{{ snow_host }}"
+              username: "{{ snow_username }}"
+              password: "{{ snow_password }}"
+            table: cmdb_ci
+            state: present
+            data:
+              name: "{{ item.new_declaration.declaration.name }}"
+              sys_class_name: cmdb_ci_service
+              operational_status: 1
+              category: API Gateway
+              short_description: "API Gateway endpoint {{ item.new_declaration.declaration.name }}"
+          register: snow_result
+
+        # Job 3: Create Infoblox CNAME Record
+        - name: Create Infoblox CNAME Record
+          infoblox.nios_modules.nios_cname_record:
+            provider:
+              host: "{{ infoblox_host }}"
+              username: "{{ infoblox_username }}"
+              password: "{{ infoblox_password }}"
+              ssl_verify: false
+            name: "{{ item.new_declaration.declaration.name }}"
+            canonical: "{{ item.new_declaration.declaration.target_url }}"
+            view: "{{ infoblox_view | default('default') }}"
+            comment: "API Gateway endpoint {{ item.new_declaration.declaration.name }}"
+          register: infoblox_result
+
+        - name: Update Change Instance status to COMPLETED
+          netautomate.netorca.update_change_instances:
+            url: "{{ netorca_url }}"
+            api_key: "{{ netorca_api_key }}"
+            context: serviceowner
+            id: "{{ item.id }}"
+            state: COMPLETED
+          loop: "{{ approved_change_instances.change_instances.results }}" 
