@@ -1,6 +1,21 @@
 # NetOrca Processing Examples
 
-Welcome! This repository contains practical examples to help **Service Owner teams** automate service requests using **NetOrca**.
+Welcome! This repository serves as a source of practical examples to help **Service Owner teams** automate service requests using **NetOrca**.
+
+## What is NetOrca?
+
+**NetOrca** is a powerful platform that helps infrastructure and network teams offer their services as reusable, self-service components. This eliminates repetitive manual work and creates a streamlined experience for both service owners and consumers.
+
+With NetOrca you can:
+
+- Define services using standardized JSON Schema
+- Allow consumers to request services via GitOps or UI
+- Automate approvals and deployments using your existing tools
+- Track change requests and current state centrally
+
+NetOrca bridges the gap between *request* and *implementation*, reducing manual work, increasing consistency, and enabling scalable automation across teams.
+
+![NetOrca Workflow](images/netorca_overview.png)  
 
 ## What You'll Find in This Repository
 
@@ -14,6 +29,7 @@ This repository is organized into key sections to help you get started and build
   
   - **F5 BIG-IP**: GTM (DNS), LTM, and WAF deployments and tuning  
   - **Palo Alto Firewalls**: rule management and service delivery  
+  - **AWS**: infrastructure and service provisioning
   - **ServiceNow**: standard change integration and lifecycle tracking
 
   You'll also find more complex multi-platform scenarios, such as:
@@ -24,19 +40,6 @@ This repository is organized into key sections to help you get started and build
 This repository is actively maintained and expanded with new examples to reflect how NetOrca fits into modern infrastructure automation.
 
 **Note:** One of our official examples is also featured in the [F5 DevCentral repository (Level 6)](https://github.com/f5devcentral/bigip-automation/blob/main/level-6/README.md).
-
-## What is NetOrca?
-
-**NetOrca** is a platform that helps infrastructure and network teams offer their services as reusable, self-service components.
-
-- Define services using JSON Schema
-- Let consumers request those services via GitOps or UI
-- Automate approvals and deployments using your existing tools
-- Track change requests and current state centrally
-
-NetOrca bridges the gap between *request* and *implementation*, reducing manual work, increasing consistency, and enabling scalable automation across teams.
-
-![NetOrca Workflow](images/netorca_overview.png)  
 
 ## Overview of Automation Workflow
 
@@ -73,6 +76,22 @@ NetOrca automation is typically divided into two main phases:
 
 Each Service Item can go through this cycle multiple times as it's created, modified, or deleted.
 
+## Getting Started
+
+1. **Explore the Basics**:
+   Browse the [basics](./basics/) directory to understand the fundamental patterns for service validation and deployment.
+
+2. **Choose an Example**:
+   Find an example in the [examples](./examples/) directory that aligns with your technology stack.
+
+3. **Adapt to Your Environment**:
+   Modify the examples with your service details, endpoints, and authentication.
+
+## Contributing
+
+We welcome contributions to expand this repository with more examples and improve existing ones. Please see our [contribution guide](CONTRIBUTING.md) for details.
+
 ## Further Reading
 
 - [NetOrca Documentation](https://docs.netorca.io)
+- [NetOrca Website](https://netorca.io)
