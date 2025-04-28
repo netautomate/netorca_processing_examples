@@ -33,17 +33,12 @@
           runtime_state: IN_SERVICE
       register: service_items
 
-    ### Custome logic starts there
+    ### Call examples ansible block here:
 
-    - name: Build declaration
-      ansible.builtin.set_fact:
-        declaration: "{{ lookup('template', './declaration.j2', split_lines=False) }}"
-    
-    - name: Deploy the declaration
-      msg:
-        debug: {{ declaration }}
+    - name: Include examples deployment
+      ansible.builtin.import_playbook: ./examples/f5_virtual_servers/virtual_server_deploy.yaml
 
-    ### Custom logic ends there
+    ### examples logic ends
     
     - name: UPDATE CHANGE INSTANCE RECORDS BASED ON DEPLOYMENT RESULTS
       netautomate.netorca.update_change_instances:
